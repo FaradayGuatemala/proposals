@@ -305,7 +305,7 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
       <rect x="38" y="90" width="84" height="10" rx="2" fill="#3A3A3A"/>
       <rect x="38" y="106" width="84" height="10" rx="2" fill="#E2231A"/>
       <rect x="38" y="122" width="84" height="10" rx="2" fill="#3A3A3A"/>
-      <text x="80" y="215" text-anchor="middle" font-size="13" font-weight="700" fill="#141414" font-family="Barlow Condensed">MAIN PANEL</text>
+      <text x="80" y="215" text-anchor="middle" font-size="13" font-weight="700" fill="#141414" font-family="Barlow Condensed" id="dPanelName">MAIN PANEL</text>
       <text x="80" y="32" text-anchor="middle" font-size="11" fill="#6E6E6A" font-family="IBM Plex Mono" id="dPanel">200A</text>
       <!-- load management monitor (shown when a device is included) -->
       <g id="lmGroup" style="display:none">
@@ -341,6 +341,56 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
         <rect x="34" y="18" width="44" height="14" rx="4" fill="#4A4A4A"/>
       </g>
       <text x="635" y="195" text-anchor="middle" font-size="13" font-weight="700" fill="#141414" font-family="Barlow Condensed" id="dCar">YOUR EV</text>
+    </svg>
+    <svg id="diagSub" viewBox="0 0 860 230" width="100%" style="min-width:700px;display:none">
+      <!-- main panel -->
+      <rect x="12" y="55" width="92" height="120" rx="9" fill="#1F1F1F"/>
+      <rect x="26" y="70" width="64" height="9" rx="2" fill="#3A3A3A"/>
+      <rect x="26" y="84" width="64" height="9" rx="2" fill="#3A3A3A"/>
+      <rect x="26" y="98" width="64" height="9" rx="2" fill="#E2231A"/>
+      <rect x="26" y="112" width="64" height="9" rx="2" fill="#3A3A3A"/>
+      <text x="58" y="200" text-anchor="middle" font-size="12" font-weight="700" fill="#141414" font-family="Barlow Condensed">MAIN PANEL</text>
+      <text x="58" y="47" text-anchor="middle" font-size="10" fill="#6E6E6A" font-family="IBM Plex Mono" id="dPanel2">200A</text>
+      <!-- feed breaker -->
+      <line x1="104" y1="115" x2="138" y2="115" stroke="#141414" stroke-width="5"/>
+      <rect x="138" y="95" width="76" height="40" rx="8" fill="#fff" stroke="#E2231A" stroke-width="2.5"/>
+      <text x="176" y="111" text-anchor="middle" font-size="12" font-weight="700" fill="#E2231A" font-family="Barlow Condensed" id="dFeedAmps">100A</text>
+      <text x="176" y="125" text-anchor="middle" font-size="8" fill="#6E6E6A" font-family="IBM Plex Mono">FEED</text>
+      <text x="176" y="155" text-anchor="middle" font-size="10" fill="#6E6E6A" font-family="Barlow Condensed" id="dFeedState">EXISTING BREAKER</text>
+      <!-- subpanel -->
+      <line x1="214" y1="115" x2="248" y2="115" stroke="#141414" stroke-width="6" stroke-linecap="round"/>
+      <line x1="214" y1="115" x2="248" y2="115" stroke="#E2231A" stroke-width="2" class="flow"/>
+      <rect x="248" y="62" width="82" height="106" rx="9" fill="#2E2E2E"/>
+      <rect x="261" y="76" width="56" height="8" rx="2" fill="#4A4A4A"/>
+      <rect x="261" y="89" width="56" height="8" rx="2" fill="#E2231A"/>
+      <rect x="261" y="102" width="56" height="8" rx="2" fill="#4A4A4A"/>
+      <text x="289" y="196" text-anchor="middle" font-size="12" font-weight="700" fill="#141414" font-family="Barlow Condensed" id="dSubName">SUBPANEL</text>
+      <text x="289" y="54" text-anchor="middle" font-size="10" fill="#6E6E6A" font-family="IBM Plex Mono" id="dSubR">100A</text>
+      <!-- EV breaker -->
+      <line x1="330" y1="115" x2="368" y2="115" stroke="#141414" stroke-width="5"/>
+      <rect x="368" y="95" width="80" height="40" rx="8" fill="#fff" stroke="#E2231A" stroke-width="2.5"/>
+      <text x="408" y="111" text-anchor="middle" font-size="12" font-weight="700" fill="#E2231A" font-family="Barlow Condensed" id="dBreaker2">50A</text>
+      <text x="408" y="125" text-anchor="middle" font-size="8" fill="#6E6E6A" font-family="IBM Plex Mono">DEDICATED</text>
+      <text x="408" y="155" text-anchor="middle" font-size="10" fill="#6E6E6A" font-family="Barlow Condensed">NEW BREAKER</text>
+      <!-- conduit to charger -->
+      <line x1="448" y1="115" x2="538" y2="115" stroke="#141414" stroke-width="7" stroke-linecap="round"/>
+      <line x1="448" y1="115" x2="538" y2="115" stroke="#E2231A" stroke-width="2.5" class="flow"/>
+      <text x="493" y="146" text-anchor="middle" font-size="9" fill="#6E6E6A" font-family="IBM Plex Mono" id="dWire2">5ft EMT</text>
+      <!-- charger -->
+      <rect x="538" y="73" width="64" height="88" rx="14" fill="#F2F2EF" stroke="#CFCFC9"/>
+      <circle cx="570" cy="103" r="10" fill="#E2231A"><animate attributeName="opacity" values="1;.35;1" dur="1.6s" repeatCount="indefinite"/></circle>
+      <rect x="558" y="126" width="24" height="5" rx="2.5" fill="#CFCFC9"/>
+      <text x="570" y="186" text-anchor="middle" font-size="12" font-weight="700" fill="#141414" font-family="Barlow Condensed">LEVEL 2 CHARGER</text>
+      <!-- cable + car -->
+      <path d="M602 115 C 650 115, 655 148, 695 148" fill="none" stroke="#141414" stroke-width="5"/>
+      <path d="M602 115 C 650 115, 655 148, 695 148" fill="none" stroke="#E2231A" stroke-width="2" class="flow"/>
+      <g transform="translate(692,120) scale(0.92)">
+        <path d="M5 32 C12 18 28 12 52 12 C 84 12 102 20 116 32 C 130 32 138 36 138 44 L138 52 L5 52 Z" fill="#1F1F1F"/>
+        <circle cx="38" cy="52" r="11" fill="#141414" stroke="#6E6E6A" stroke-width="3"/>
+        <circle cx="108" cy="52" r="11" fill="#141414" stroke="#6E6E6A" stroke-width="3"/>
+        <rect x="34" y="18" width="44" height="14" rx="4" fill="#4A4A4A"/>
+      </g>
+      <text x="758" y="196" text-anchor="middle" font-size="12" font-weight="700" fill="#141414" font-family="Barlow Condensed" id="dCar2">YOUR EV</text>
     </svg>
     <div class="diagram-note" id="diagNote"></div>
   </div>
@@ -677,7 +727,7 @@ function render(){
   const subCard = C.subpanel==='required'
     ? `<div class="gcard tech"><div class="ic">&#129520;</div><div class="v">Subpanel included</div><div class="l">Creates breaker space — panel capacity verified</div></div>`
     : C.subpanel==='distance'
-    ? `<div class="gcard tech"><div class="ic">&#128205;</div><div class="v">Subpanel included</div><div class="l">Placed near your charger — cleaner, shorter run</div></div>`
+    ? `<div class="gcard tech"><div class="ic">&#128205;</div><div class="v">Existing subpanel</div><div class="l">Your charger installs from it — it\u2019s closer, for a shorter, cleaner run</div></div>`
     : C.subpanel==='addon'
     ? `<div class="gcard"><div class="ic">&#129513;</div><div class="v">Subpanel add-on</div><div class="l">Optional — creates breaker space if you want room to grow</div></div>`
     : '';
@@ -702,7 +752,9 @@ function render(){
   const isTesla=/tesla/i.test(C.charger);
   const stepsArr=[
     ['Easy access, zero disruption',`We only need access to your garage and the electrical panel — no access inside your home is required (unless your project includes attic/crawlspace runs or an interior panel). And the power stays ON the entire time: we never shut off electricity to your home during the installation. Bonus: if you can give us remote garage access (keypad code or smart opener), you don't even need to be home — total flexibility on scheduling.`],
-    ['New dedicated breaker',`A ${C.breakerAmps}-amp breaker is installed exclusively for your charger — nothing else shares this circuit.`],
+    C.subpanel==='distance'
+      ? ['New dedicated breaker',`A ${C.breakerAmps}-amp breaker is installed in your existing subpanel — it\u2019s much closer to the charger location than the main panel, giving you a shorter, cleaner run. Nothing else shares this circuit.`]
+      : ['New dedicated breaker',`A ${C.breakerAmps}-amp breaker is installed exclusively for your charger — nothing else shares this circuit.`],
     ['Wiring & conduit',C.wireRun+' — routed clean and to code.'],
     ['Mount & connect',`Your ${C.charger} is mounted ${C.locationDesc.toLowerCase()}, between 24in and 5ft above the parking surface per NEC 625.`],
     ...(LM.step?[LM.step]:[]),
@@ -712,7 +764,6 @@ function render(){
   ];
   // panel upgrade happens first on site — reposition its step right after access info
   if(lm==='upgrade' && LM.step){ const idx=stepsArr.findIndex(s=>s[0]===LM.step[0]); const st=stepsArr.splice(idx,1)[0]; stepsArr.splice(1,0,st); }
-  if(C.subpanel==='distance') stepsArr.splice(1,0,['Subpanel install',`Your charger location sits a good distance from the main panel — so we install a subpanel near the charger, fed from your main panel. It makes for a cleaner, shorter final run, easier service, and ready-made space for future circuits.`]);
   if(C.subpanel==='required') stepsArr.splice(1,0,['Subpanel install',`Your main panel has the electrical capacity for the charger but no physical space left for a new breaker — so we install a subpanel fed from your main panel, creating clean breaker space for your charger\u2019s dedicated circuit (with room for future additions).`]);
   $('steps').innerHTML = stepsArr.map((s,i)=>`<div class="step"><div class="n">${i+1}</div><div><h4>${s[0]}</h4><p>${esc(s[1])}</p></div></div>`).join('');
 
@@ -726,13 +777,28 @@ function render(){
   } else { $('lmWidgetNote').style.display='none'; }
   $('lmGroup').style.display = LMDEV ? 'block' : 'none';
   if(LMDEV) $('dLMName').textContent=LMDEV[1];
+  const subChain = C.subpanel==='required' || C.subpanel==='distance';
+  document.getElementById('diag').style.display = subChain?'none':'block';
+  $('diagSub').style.display = subChain?'block':'none';
+  $('dPanelName').textContent='MAIN PANEL';
   $('dPanel').textContent=C.panelRating+'A';
+  if(subChain){
+    const spr=C.subpanelRating?C.subpanelRating+'A':'';
+    $('dPanel2').textContent=C.panelRating+'A';
+    $('dFeedAmps').textContent=spr||'FEED';
+    $('dFeedState').textContent=C.subpanel==='required'?'NEW BREAKER':'EXISTING BREAKER';
+    $('dSubName').textContent=C.subpanel==='required'?'NEW SUBPANEL':'SUBPANEL';
+    $('dSubR').textContent=spr;
+    $('dBreaker2').textContent=C.breakerAmps+'A';
+    $('dCar2').textContent=(C.carModel||'YOUR EV').toUpperCase();
+  }
   $('dBreaker').textContent=C.breakerAmps+'A';
   let wl=C.wireRun.split('·')[0].trim().replace(/\s*conduit\s*$/i,'');
   if(wl.length>20) wl=wl.slice(0,19)+'…';
   $('dWire').textContent=wl;
+  $('dWire2').textContent=wl;
   $('dCar').textContent=(C.carModel||'YOUR EV').toUpperCase();
-  $('diagNote').textContent=`Live diagram of your circuit: ${C.panelDesc} → new ${C.breakerAmps}A dedicated breaker → ${C.wireRun} → ${C.charger} → ${C.carModel}.`
+  $('diagNote').textContent=`Live diagram of your circuit: ${subChain?(C.panelDesc+' → '+(C.subpanel==='required'?'new':'existing')+' '+(C.subpanelRating?C.subpanelRating+'A ':'')+'feed breaker → '+(C.subpanel==='required'?'new subpanel':'your existing subpanel (closest to the charger)')):C.panelDesc} → new ${C.breakerAmps}A dedicated breaker → ${C.wireRun} → ${C.charger} → ${C.carModel}.`
     + (LMDEV?` The ${LMDEV[0]} (blue) continuously monitors your panel\u2019s total load and automatically adjusts charging so the panel never exceeds capacity.`:'');
 
   const B=(cls,ic,txt)=>`<div class="badge ${cls}"><span class="ck">${ic}</span> ${txt}</div>`;
@@ -742,7 +808,7 @@ function render(){
   if(C.subpanel) badgeList=badgeList.filter(b=>!/No subpanel needed/.test(b[2]));
   $('loadBadges').innerHTML=badgeList.map(b=>B(b[0],b[1],b[2])).join('');
   if(C.subpanel==='required') $('loadBadges').innerHTML+=B('techb','&#129520;','Your panel has the capacity, but no physical breaker space — a subpanel is included to create the space for your charger\u2019s circuit');
-  if(C.subpanel==='distance') $('loadBadges').innerHTML+=B('techb','&#128205;','A subpanel is installed near the charger location — the smart way to cover the distance from your main panel: a cleaner, shorter run with room for future circuits');
+  if(C.subpanel==='distance') $('loadBadges').innerHTML+=B('techb','&#128205;','Your home already has a subpanel much closer to the charger location — we\u2019ll power the charger from it instead of the main panel: a shorter, cleaner run, capacity verified');
   if(C.subpanel && C.subpanelRating && C.subpanelLoad){
     const spOk=C.subpanelLoad<=C.subpanelRating;
     $('loadBadges').innerHTML+=B(spOk?'':'warnb', spOk?'✓':'!', 'Subpanel load calculation: '+C.subpanelLoad+'A of '+C.subpanelRating+'A subpanel capacity — '+(spOk?'verified within capacity':'over capacity, see your advisor'));
@@ -876,7 +942,7 @@ const FIELDS=[
  ['phone','Customer phone'],['projectNo','Project number'],['date','Proposal date'],['advisor','Energy advisor'],
  ['advisorPhone','Advisor phone'],['advisorEmail','Advisor email'],['carModel','Car model / EV (any brand)'],['charger','EV charger model — any brand, shown At a Glance (e.g. ChargePoint HomeFlex, Wallbox Pulsar, Tesla Wall Connector)'],
  ['breakerAmps','Breaker amps (number)'],['drawAmps','Constant draw amps'],['panelDesc','Panel description'],['panelRating','Panel rating (A)'],
- ['calcLoad','Calculated load (A)'],['wireRun','Wire / conduit run'],['locationDesc','Charger location'],['siteNote','Site note — sentence under \'Exactly where it goes\' (blank = auto from data)'],['loadSolution','Panel load situation','select',[['','Auto (OK if load ≤ rating)'],['ok','Panel OK — no upgrade needed'],['practical','Over capacity on paper — practical load per NEC 220.87 (12-mo utility bills)'],['schedule','Over capacity — night charging schedules (no permit)'],['dcc','Over capacity — DCC Load Management'],['sak','Over capacity — SAK Load Management'],['tesla','Over capacity — Tesla Remote Meter'],['simpleswitch','Over capacity — simpleSwitch EVEMS (48A)'],['upgrade','Panel Upgrade — included in project']]],['subpanel','Subpanel situation','select',[['','No subpanel needed'],['required','Subpanel required — no breaker space (capacity OK)'],['distance','Subpanel for distance & location convenience'],['addon','Subpanel available as optional add-on']]],['subpanelRating','Subpanel rating (A) — enables subpanel load calc'],['subpanelLoad','Subpanel calculated load (A)'],['practicalLoad','Practical load result (A) — NEC 220.87'],['loadNote','Extra load-management note (optional)'],['price','Final price — grand total (e.g. $954.20)'],['permitTotal','Permit total (blank = no permit, e.g. $244.90)'],['priceLabor','Parts & Labor only price (shown when permit present)'],
+ ['calcLoad','Calculated load (A)'],['wireRun','Wire / conduit run'],['locationDesc','Charger location'],['siteNote','Site note — sentence under \'Exactly where it goes\' (blank = auto from data)'],['loadSolution','Panel load situation','select',[['','Auto (OK if load ≤ rating)'],['ok','Panel OK — no upgrade needed'],['practical','Over capacity on paper — practical load per NEC 220.87 (12-mo utility bills)'],['schedule','Over capacity — night charging schedules (no permit)'],['dcc','Over capacity — DCC Load Management'],['sak','Over capacity — SAK Load Management'],['tesla','Over capacity — Tesla Remote Meter'],['simpleswitch','Over capacity — simpleSwitch EVEMS (48A)'],['upgrade','Panel Upgrade — included in project']]],['subpanel','Subpanel situation','select',[['','No subpanel needed'],['required','Subpanel required — no breaker space (capacity OK)'],['distance','Use existing subpanel — closer to charger (distance/convenience)'],['addon','Subpanel available as optional add-on']]],['subpanelRating','Subpanel rating (A) — enables subpanel load calc'],['subpanelLoad','Subpanel calculated load (A)'],['practicalLoad','Practical load result (A) — NEC 220.87'],['loadNote','Extra load-management note (optional)'],['price','Final price — grand total (e.g. $954.20)'],['permitTotal','Permit total (blank = no permit, e.g. $244.90)'],['priceLabor','Parts & Labor only price (shown when permit present)'],
  ['zellePrice','Zelle price (blank = hide)'],['taxLine','Price subtitle line'],['acceptUrl','CRM quote Accept link (client-specific URL)'],['signUrl','E-signature link — Dropbox Sign/HelloSign or DocuSign URL, or type: email'],['signRole','Prefill role name (DocuSign PowerForms only, optional)']
 ];
 function editorOpen(){
