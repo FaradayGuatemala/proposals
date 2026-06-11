@@ -378,7 +378,7 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
     <div class="q-head"><div class="t">Your Installation</div><div class="pn" id="qProj"></div></div>
     <div class="q-items" id="qItems"></div>
     <div class="q-total"><div class="l">Final Price<small id="qTermsLine">Parts &amp; Labor · Payment due on installation completion</small></div><div class="v" id="qTotal"></div></div>
-    <div class="q-zelle" id="qZelleRow"><span>&#9889; Pay by Zelle and save the card fee:</span><b id="qZelle"></b></div>
+    <div class="q-zelle" id="qZelleRow" style="display:none"><span>&#9889; Pay by Zelle and save the card fee:</span><b id="qZelle"></b></div>
     <div class="q-note">One-year warranty included. Price reflects installation as detailed in this proposal — any change to the final charger location must be discussed with your Energy Advisor.</div>
   </div>
 </section>
@@ -423,12 +423,12 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
 <!-- APPROVE -->
 <div class="sec" style="padding-bottom:0"><div class="approve reveal" id="approveSec">
   <h2>Ready when you are<span style="color:var(--red)">.</span></h2>
-  <p>One tap sends your approval straight to your Energy Advisor — we'll reply with your installation date.</p>
-  <div class="row">
+  <p id="apLead">One tap sends your approval straight to your Energy Advisor — we'll reply with your installation date.</p>
+  <div class="row" id="approveRow">
     <a class="btn btn-red" id="btnApprove" href="#">&#10003; Approve this proposal</a>
-    <a class="btn btn-line" id="btnQuestion" href="#">I have a question</a>
+    <a class="btn btn-line" id="btnSign" href="#" style="display:none">&#9998; Sign the Scope of Work</a>
   </div>
-  <div class="adv"><span>Your Energy Advisor: <b id="aAdv"></b> · <a id="aCall" href="#" style="color:#FF8A7A;text-decoration:none;font-weight:700">Call or text</a></span></div>
+  <div class="adv" style="display:block;text-align:center;line-height:1.7"><span>If you have any questions or require modifications, contact your Energy Advisor:<br><b id="aAdv"></b> · <a id="aCall" href="#" style="color:#FF8A7A;text-decoration:none;font-weight:700">Call or text</a></span></div>
 </div></div>
 
 <footer id="foot"></footer>
@@ -454,6 +454,11 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
 <div id="editPanel"><div class="ed-card">
   <h3>Personalize this proposal</h3>
   <div class="hint">Fill the client's details, then <b>Save client copy</b> — you'll get a personalized HTML file to host or send. Clients never see this panel (it only appears when the address ends in <span class="mono">#edit</span>).</div>
+  <div class="ed-f" style="background:#FBEDEC;border:1.5px dashed var(--red);border-radius:10px;padding:12px;margin-bottom:14px">
+    <label style="color:var(--red)">&#9889; Auto-fill from Scope of Work PDF</label>
+    <input type="file" accept="application/pdf" id="edSow">
+    <div class="hint" style="margin:6px 0 0">Upload the SOW PDF and I'll extract the customer, project, panel, breaker, load and price details automatically. Always review the fields before saving.</div>
+  </div>
   <div class="ed-grid" id="edFields"></div>
   <div class="ed-f"><label>Quote line items (one per line)</label><textarea id="edItems" rows="4"></textarea></div>
   <div class="ed-f"><label>Project photos — add as many as you need</label>
@@ -490,10 +495,14 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
   "calcLoad":182,
   "wireRun":"<5 ft of ¾\" EMT conduit · #6 THHN copper + #10 ground",
   "locationDesc":"Inside the garage, on the same wall directly behind the main panel",
+  "siteNote":"",
   "items":["Single-Family Home Installation","Wiring & Conduit — back-to-back/side-to-side","Special Breaker: Zinsco 50A","One-year Warranty"],
   "price":"$670.00",
   "zellePrice":"$647.00",
   "taxLine":"Parts & Labor · Payment due on installation completion",
+  "acceptUrl":"",
+  "signUrl":"",
+  "signRole":"",
   "photos":[],
   "loadRows":[["General lighting load (2,749 sqft × 3 VA)","8,247 VA"],["Small appliance branch circuits (11)","16,500 VA"],["240V appliance circuit (50A)","9,600 VA"],["Microwave / disposal / dishwasher / washer","5,000 VA"],["Oven + range (40A each)","15,360 VA"],["Dryer (30A)","5,760 VA"],["Proposed EVSE Level 2 (50A @ 40A)","9,600 VA"],["Subtotal (A)","70,067 VA"],["After demand factors (B)","34,027 VA"],["A/C load (50A)","9,600 VA"],["Total D = (B)+(C)","43,627 VA → 182 A"]]
 }
@@ -535,13 +544,16 @@ function render(){
     : `Estimated for a typical EV at ~3 mi per kWh on ${row[1]} kW. Your exact rate depends on the vehicle.`;
   const hrs=+$('hrs').value; $('hrsV').textContent=hrs; $('milesV').textContent=(mph*hrs).toLocaleString();
 
-  $('planLead').textContent=`Installation at ${C.address}. ${C.locationDesc}. Most installs like yours are done in a single visit.`;
+  $('planLead').textContent=`Installation at ${C.address}. ${C.locationDesc}. All installations are completed in a single day.`;
+  const isTesla=/tesla/i.test(C.charger);
   $('steps').innerHTML=[
-    ['Safety first','We shut down and verify the panel, then get to work on your '+C.panelDesc+'.'],
+    ['Easy access, zero disruption',`We only need access to your garage and the electrical panel — no access inside your home is required (unless your project includes attic/crawlspace runs or an interior panel). And the power stays ON the entire time: we never shut off electricity to your home during the installation. Bonus: if you can give us remote garage access (keypad code or smart opener), you don't even need to be home — total flexibility on scheduling.`],
     ['New dedicated breaker',`A ${C.breakerAmps}-amp breaker is installed exclusively for your charger — nothing else shares this circuit.`],
     ['Wiring & conduit',C.wireRun+' — routed clean and to code.'],
     ['Mount & connect',`Your ${C.charger} is mounted ${C.locationDesc.toLowerCase()}, between 24in and 5ft above the parking surface per NEC 625.`],
-    ['Test, label & walkthrough','We energize, load-test, label the breaker, and show you exactly how everything works before we leave.']
+    isTesla
+      ? ['Tesla Commissioning',`We energize and commission your ${C.charger}, connect it to your Wi-Fi (when signal strength at the charger location allows), and upload your installation records as Tesla Certified Installers for warranty purposes.`]
+      : ['Commissioning & walkthrough',`We energize and commission your ${C.charger}, connect it to your Wi-Fi (when signal strength at the charger location allows), register it for warranty purposes, and walk you through everything before we leave.`]
   ].map((s,i)=>`<div class="step"><div class="n">${i+1}</div><div><h4>${s[0]}</h4><p>${esc(s[1])}</p></div></div>`).join('');
 
   $('dPanel').textContent=C.panelRating+'A';
@@ -555,7 +567,9 @@ function render(){
   requestAnimationFrame(()=>{ $('gArc').style.transition='stroke-dashoffset 1.4s ease'; $('gArc').style.strokeDashoffset=283*(1-pct); });
   $('loadTable').innerHTML=(C.loadRows||[]).map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('');
 
-  $('siteLead').textContent=`${C.locationDesc}. The main panel is ${C.panelDesc.toLowerCase().includes('outside')?'right outside on the same wall':'nearby'}, which keeps your wiring run short and your install clean.`;
+  $('siteLead').textContent = (C.siteNote||'').trim()
+    ? C.siteNote.trim()
+    : `Charger location: ${C.locationDesc.toLowerCase()}. Powered from your ${C.panelDesc} via ${C.wireRun}.`;
   const mks=p=>(p.markers||[]).map(m=>`<div class="mk ${m.x<50?'r':'l'}" style="left:${m.x}%;top:${m.y}%"><div class="dot"></div><span class="chip">${esc(m.label)}</span></div>`).join('');
   window.__mks=mks;
   const photos=C.photos||[];
@@ -581,17 +595,39 @@ function render(){
   $('qProj').textContent=C.projectNo;
   $('qItems').innerHTML=(C.items||[]).map(i=>`<div class="q-item"><span>${esc(i)}</span><span class="inc">INCLUDED</span></div>`).join('');
   $('qTotal').textContent=C.price; $('qTermsLine').textContent=C.taxLine;
-  if(C.zellePrice){ $('qZelleRow').style.display='flex'; $('qZelle').textContent=C.zellePrice; } else $('qZelleRow').style.display='none';
+  if((C.zellePrice||'').trim()){ $('qZelleRow').style.display='flex'; $('qZelle').textContent=C.zellePrice.trim(); } else $('qZelleRow').style.display='none';
   $('sPrice').textContent=C.price;
 
   $('aAdv').textContent=C.advisor;
   $('aCall').href='tel:'+C.advisorPhone.replace(/[^0-9+]/g,'');
   $('aCall').textContent=C.advisorPhone;
-  const subj=encodeURIComponent(`APPROVED — ${C.projectNo} (${C.customerName})`);
-  const body=encodeURIComponent(`Hi ${C.advisor},\n\nI approve the EV charger installation proposal ${C.projectNo} for ${C.address} at the quoted price of ${C.price}.\n\nPlease contact me to schedule the installation.\n\n${C.customerName}\n${C.phone}`);
-  $('btnApprove').href=`mailto:${C.advisorEmail}?subject=${subj}&body=${body}`;
-  const qs=encodeURIComponent(`QUESTION — ${C.projectNo} (${C.customerName})`);
-  $('btnQuestion').href=`mailto:${C.advisorEmail}?subject=${qs}`;
+  const signMode = !C.signUrl ? 'off' : (/^e-?mail$/i.test(C.signUrl.trim()) ? 'email' : 'url');
+  if(signMode==='url'){
+    let su=C.signUrl.trim();
+    if(C.signRole){
+      const r=encodeURIComponent(C.signRole);
+      su += (su.includes('?')?'&':'?') + r+'_UserName='+encodeURIComponent(C.customerName)+'&'+r+'_Email='+encodeURIComponent(C.email);
+    }
+    $('btnSign').href=su; $('btnSign').target='_blank'; $('btnSign').rel='noopener';
+    $('btnSign').style.display='inline-block';
+    $('btnSign').innerHTML = C.acceptUrl ? '2&#65039;&#8419; Sign the Scope of Work' : '&#9998; Sign the Scope of Work';
+  } else { $('btnSign').style.display='none'; }
+  if(C.acceptUrl){
+    $('btnApprove').href=C.acceptUrl; $('btnApprove').target='_blank'; $('btnApprove').rel='noopener';
+    $('btnApprove').innerHTML = C.signUrl ? '1&#65039;&#8419; Accept your official quote' : '&#10003; Accept your official quote';
+    $('apLead').textContent = signMode==='url'
+      ? 'Two quick steps: 1) open your official quote and click Accept to lock in your price, then 2) e-sign the Scope of Work (terms, permit, payment terms, and charger location/routing). Both take under a minute.'
+      : signMode==='email'
+      ? 'Tap below to open your official quote and click Accept — that locks in your price. Right after, you\u2019ll receive your Scope of Work by email for e-signature (terms, permit, payment terms, and charger location/routing) — please sign it to confirm your installation.'
+      : 'Tap below to open your official quote and click Accept — that locks in your price and we\u2019ll reach out with your installation date. (The same quote is in your email inbox.)';
+  } else {
+    const subj=encodeURIComponent(`APPROVED — ${C.projectNo} (${C.customerName})`);
+    const body=encodeURIComponent(`Hi ${C.advisor},\n\nI approve the EV charger installation proposal ${C.projectNo} for ${C.address} at the quoted price of ${C.price}.\n\nPlease contact me to schedule the installation.\n\n${C.customerName}\n${C.phone}`);
+    $('btnApprove').href=`mailto:${C.advisorEmail}?subject=${subj}&body=${body}`;
+    $('btnApprove').removeAttribute('target');
+    $('btnApprove').innerHTML='&#10003; Approve this proposal';
+    $('apLead').textContent='One tap sends your approval straight to your Energy Advisor — we\u2019ll reply with your installation date.';
+  }
 
   $('foot').innerHTML=`Faraday Electric Corp · C10 License #1046805 · 2684 A Street, San Diego CA 92102<br>(866) 860-8420 · info@faradayelectric-ev.com · www.faradayelectric-ev.com<br>Proposal ${esc(C.projectNo)} prepared for ${esc(C.customerName)} · ${esc(C.date)}`;
 }
@@ -618,8 +654,8 @@ const FIELDS=[
  ['phone','Customer phone'],['projectNo','Project number'],['date','Proposal date'],['advisor','Energy advisor'],
  ['advisorPhone','Advisor phone'],['advisorEmail','Advisor email'],['carModel','Car model'],['charger','Charger'],
  ['breakerAmps','Breaker amps (number)'],['drawAmps','Constant draw amps'],['panelDesc','Panel description'],['panelRating','Panel rating (A)'],
- ['calcLoad','Calculated load (A)'],['wireRun','Wire / conduit run'],['locationDesc','Charger location'],['price','Final price (e.g. $670.00)'],
- ['zellePrice','Zelle price (blank = hide)'],['taxLine','Price subtitle line']
+ ['calcLoad','Calculated load (A)'],['wireRun','Wire / conduit run'],['locationDesc','Charger location'],['siteNote','Site note — sentence under \'Exactly where it goes\' (blank = auto from data)'],['price','Final price (e.g. $670.00)'],
+ ['zellePrice','Zelle price (blank = hide)'],['taxLine','Price subtitle line'],['acceptUrl','CRM quote Accept link (client-specific URL)'],['signUrl','E-signature link — Dropbox Sign/HelloSign or DocuSign URL, or type: email'],['signRole','Prefill role name (DocuSign PowerForms only, optional)']
 ];
 function editorOpen(){
   $('edFields').innerHTML=FIELDS.map(([k,l])=>`<div class="ed-f"><label>${l}</label><input data-k="${k}" value="${esc(CFG[k]??'')}"></div>`).join('');
@@ -722,6 +758,77 @@ $('annoStage').addEventListener('click',e=>{
   annoRender();
 });
 $('annoDone').onclick=()=>{ $('annoModal').classList.remove('open'); render(); };
+
+/* ===== SOW PDF auto-fill ===== */
+function parseSOW(t){
+  const out={}; const g=(re,i=1)=>{const m=t.match(re);return m?m[i].trim():null;};
+  const proj=g(/PROJECT NUMBER:\s*([A-Z]{2,3}-\d+)/i); if(proj) out.projectNo=proj;
+  const adv=g(/ENERGY ADVISOR:\s*([A-Z][A-Za-z .'-]+?)(?=\s*(?:PROJECT|MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY|$))/i); if(adv) out.advisor=adv.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+  const cust=t.match(/([A-Z][A-Za-z .'-]{2,40})\s*\/\s*([\w.+-]+@[\w.-]+\.\w+)\s*\/\s*([\d .()\-]{7,16})/);
+  const tc=s=>s.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+  if(cust){ out.customerName=tc(cust[1].trim().replace(/\s+/g,' ')); out.email=cust[2].trim().toLowerCase(); out.phone=cust[3].trim(); out.firstName=out.customerName.split(' ')[0]; }
+  const addr=g(/(\d+[^,\n]{2,50},[^,\n]{2,40},\s*[A-Z]{2}\s*\d{5})/); if(addr) out.address=addr;
+  const dt=g(/((?:MON|TUES|WEDNES|THURS|FRI|SATUR|SUN)DAY,\s*[A-Z]+\s*\d+\w*,\s*\d{4})/i);
+  if(dt) out.date=dt.toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase()).replace(/(\d)(Th|St|Nd|Rd)\b/gi,(mm,n,s)=>n+s.toLowerCase());
+  const car=g(/CHARGING INSTALLATION:\s*([A-Za-z0-9 ]+?)(?=\s*(?:SCOPE|$))/i); if(car) out.carModel=car.replace(/\b([A-Z])([A-Z]+)/g,(m,a,b)=>a+b.toLowerCase());
+  const chg=g(/Car Charger:\s*([A-Za-z0-9 ()\-]+)/i); if(chg) out.charger=chg;
+  const brk=g(/(\d{2,3})\s*amp Circuit Breaker/i); if(brk) out.breakerAmps=+brk;
+  const draw=g(/(\d{2,3})\s*amp constant draw/i); if(draw) out.drawAmps=+draw;
+  const panel=t.match(/(\d{2,3})\s*amp\s+([A-Za-z]+)\s+Main Panel/i);
+  if(panel){ out.panelRating=+panel[1]; out.panelDesc=panel[1]+'amp '+panel[2]+' Main Panel'; }
+  const load=g(/at\s+(\d{2,3})\s*amp including/i) || g(/Panel at\s+(\d{2,3})\s*amp/i); if(load) out.calcLoad=+load;
+  const wireFt=g(/(<?\s*\d+\s*f(?:ee|oo)?t)[^\n]{0,30}?(¾|3\/4)[”"']?\s*(?:New\s*)?EMT/i);
+  const gauge=g(/#(\d+)\s*THHN/i);
+  if(wireFt||gauge) out.wireRun=((wireFt?wireFt.replace(/\s+/g,'')+' of ':'')+'¾\" EMT conduit'+(gauge?' · #'+gauge+' THHN copper':'')).trim();
+  const loc=g(/location of the [^.]*?Charger is ([^.]+)\./i); if(loc) out.locationDesc=loc.replace(/^on the /i,'').replace(/^the /i,'').trim().replace(/^./,c=>c.toUpperCase());
+  const pp=g(/(The Main Panel is [^.]+\.)/i); if(pp) out.siteNote=pp.replace(/\s+/g,' ').trim();
+  let price=g(/Total After Taxes\s*\$\s*([\d,]+\.\d{2})/i) || g(/FINAL PRICE[\s\S]{0,400}?\$\s*([\d,]+\.\d{2})/i) || g(/Total\s*\$\s*([\d,]+\.\d{2})/i);
+  if(price) out.price='$'+price;
+  const items=[...t.matchAll(/^\s*([A-Z][A-Za-z0-9 &:\/\-–]{4,60}?)\s+Included\s+Included\s+Included\s*$/gm)].map(m=>m[1].trim());
+  if(items.length) out.items=items;
+  return out;
+}
+window.parseSOW=parseSOW;
+function loadPdfJs(){
+  return new Promise((res,rej)=>{
+    if(window.pdfjsLib) return res();
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload=()=>{ window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; res(); };
+    s.onerror=()=>rej(new Error('pdfjs load failed'));
+    document.head.appendChild(s);
+  });
+}
+$('edSow').addEventListener('change',async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    await loadPdfJs();
+    const buf=await f.arrayBuffer();
+    const pdf=await window.pdfjsLib.getDocument({data:buf}).promise;
+    let text='';
+    for(let p=1;p<=pdf.numPages;p++){
+      const pg=await pdf.getPage(p);
+      const tc=await pg.getTextContent();
+      let last=null;
+      tc.items.forEach(it=>{
+        const y=Math.round(it.transform[5]);
+        if(last!==null && Math.abs(y-last)>3) text+='\n';
+        text+=it.str+' ';
+        last=y;
+      });
+      text+='\n';
+    }
+    const found=parseSOW(text);
+    Object.assign(CFG, found);
+    // refresh inputs
+    document.querySelectorAll('#edFields input').forEach(i=>{ if(found[i.dataset.k]!==undefined) i.value=found[i.dataset.k]; });
+    if(found.items) $('edItems').value=found.items.join('\n');
+    render();
+    const n=Object.keys(found).length;
+    alert(n? 'Auto-filled '+n+' field'+(n>1?'s':'')+' from the PDF. Please review each field — especially price and load — before saving the client copy.' : 'Could not recognize this PDF layout — please fill the fields manually.');
+  }catch(err){ alert('Could not read that PDF here ('+err.message+'). Fill the fields manually.'); }
+  e.target.value='';
+});
 
 function checkEdit(){ $('editFab').style.display = location.hash==='#edit' ? 'block':'none'; }
 window.addEventListener('hashchange',checkEdit); checkEdit();
