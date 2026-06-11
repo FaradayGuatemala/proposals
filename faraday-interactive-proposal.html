@@ -747,7 +747,17 @@ $('edClose').onclick=()=>$('editPanel').classList.remove('open');
 function buildClientHtml(){
   editorApply();
   $('cfg').textContent=JSON.stringify(CFG);
-  return '<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  // snapshot with every overlay closed so the client file opens clean
+  const panel=$('editPanel'), wasOpen=panel.classList.contains('open');
+  panel.classList.remove('open');
+  $('annoModal').classList.remove('open');
+  $('lightbox').classList.remove('open');
+  const fab=$('editFab'), fabPrev=fab.style.display; fab.style.display='none';
+  const pubPrev=$('pubResult').style.display; $('pubResult').style.display='none';
+  const src='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+  if(wasOpen) panel.classList.add('open');
+  fab.style.display=fabPrev; $('pubResult').style.display=pubPrev;
+  return src;
 }
 function slugName(){
   return 'faraday-proposal-'+((CFG.customerName||'client').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))+'.html';
@@ -788,10 +798,8 @@ $('pubCopy').onclick=async()=>{
 };
 
 $('edSave').onclick=()=>{
-  editorApply();
-  $('cfg').textContent=JSON.stringify(CFG);
+  const src=buildClientHtml();
   const name=(CFG.customerName||'client').toLowerCase().replace(/[^a-z0-9]+/g,'-');
-  const src='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([src],{type:'text/html'}));
   a.download=`faraday-proposal-${name}.html`;
