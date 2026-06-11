@@ -363,6 +363,12 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
     </div>
     <div class="badges">
       <div id="loadBadges"></div>
+      <div id="practicalDocWrap" style="display:none;margin-top:12px">
+        <button id="practicalDocBtn" style="display:flex;gap:12px;align-items:center;width:100%;background:#fff;border:1.5px solid #C8D8F0;border-radius:10px;padding:10px 12px;cursor:zoom-in;text-align:left">
+          <img id="practicalDocThumb" style="width:64px;height:48px;object-fit:cover;border-radius:5px" alt="Practical load worksheet">
+          <span style="font-size:13px;font-weight:600;color:#1D4373">View your practical load worksheet<br><span style="font-weight:400;font-size:11.5px;color:#6E6E6A">NEC 220.87 · based on your 12-month utility data</span></span>
+        </button>
+      </div>
       <details class="load-detail"><summary>See the full load calculation</summary>
         <table id="loadTable"></table>
       </details>
@@ -477,6 +483,12 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
   </div>
   <div class="ed-grid" id="edFields"></div>
   <div class="ed-f"><label>Quote line items (one per line)</label><textarea id="edItems" rows="4"></textarea></div>
+  <div class="ed-f"><label>Practical load worksheet — image or PDF (shown when NEC 220.87 mode is selected)</label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="file" accept="image/*,application/pdf" id="edPractical" style="flex:1">
+      <button class="btn btn-ghost" id="edPracticalClear" style="padding:7px 12px;font-size:12px">Clear</button>
+    </div>
+  </div>
   <div class="ed-f"><label>Project photos — add as many as you need</label>
     <input type="file" accept="image/*" multiple id="edAddPhotos">
     <div class="hint" style="margin-top:4px">Select multiple at once (panel, location, satellite view, several final-product shots…). Each photo gets its own caption and 📍 annotations.</div>
@@ -531,6 +543,8 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
   "siteNote":"",
   "loadSolution":"",
   "subpanel":"",
+  "practicalLoad":"",
+  "practicalDoc":"",
   "loadNote":"",
   "items":["Single-Family Home Installation","Wiring & Conduit — back-to-back/side-to-side","Special Breaker: Zinsco 50A","One-year Warranty"],
   "price":"$670.00",
@@ -623,6 +637,13 @@ function render(){
           ['','✓','New capacity covers the EV charger plus your home\u2019s existing loads'],
           ['','✓','Permitted and inspected — done to current code']],
         step:['Panel upgrade','We upgrade your main electrical panel before running the new circuit — new panel, new breakers, done to current code and inspected. Your home gets modern capacity with room to grow.']},
+    practical:{card:['ok','&#128203;','Permit-ready','Verified with real usage data · NEC 220.87'],
+        h2:'Verified with your real usage data',
+        lead:'On paper, the standard NEC calculation puts your panel over capacity — so we went further: we analyzed 12 months of your actual utility data, and your home\u2019s real demand shows the panel can handle the charger.',
+        badges:[['warnb','!','Standard (theoretical) NEC calculation: '+C.calcLoad+'A — over the panel\u2019s '+C.panelRating+'A rating on paper'],
+          ['techb','&#128202;','NEC 220.87 allows using your home\u2019s actual maximum demand, measured from 12 months of utility bills, instead of the theoretical worst case'],
+          ['techb','&#128203;','Your actual maximum demand × 125% + the EV charger = '+(C.practicalLoad||'—')+'A — within your '+C.panelRating+'A panel'],
+          ['','✓','Permit-eligible under NEC 220.87 — no panel upgrade, no load management needed']]},
     over:{card:['warn','&#9888;','At capacity','Managed solution — see load section'],
         h2:'Your panel is at capacity',
         lead:'The NEC load calculation shows your panel is over capacity with the charger added — your Energy Advisor will review the management options for your home.',
@@ -693,10 +714,19 @@ function render(){
   if(C.subpanel==='required') $('loadBadges').innerHTML+=B('techb','&#129520;','Your panel has the capacity, but no physical breaker space — a subpanel is included to create the space for your charger\u2019s circuit');
   if(C.subpanel==='addon') $('loadBadges').innerHTML+=B('techb','&#129513;','Optional add-on: a subpanel to create extra breaker space (your panel\u2019s capacity is fine) — ask your Energy Advisor');
   if((C.loadNote||'').trim()) $('loadBadges').innerHTML+=B('techb','&#128172;',esc(C.loadNote.trim()));
-  $('gLoad').textContent=C.calcLoad; $('gCap').textContent=C.panelRating;
-  const pct=Math.min(C.calcLoad/C.panelRating,1);
+  const gaugeLoad = (lm==='practical' && C.practicalLoad) ? C.practicalLoad : C.calcLoad;
+  $('gLoad').textContent=gaugeLoad; $('gCap').textContent=C.panelRating;
+  document.querySelector('.gauge-box > div').innerHTML = lm==='practical'
+    ? 'Actual maximum demand incl. your new EV charger<br>(NEC 220.87 · 12 months of utility data)'
+    : 'Calculated load including your new EV charger<br>(NEC 220.53 / 220.82)';
+  const pct=Math.min(gaugeLoad/C.panelRating,1);
   requestAnimationFrame(()=>{ $('gArc').style.transition='stroke-dashoffset 1.4s ease'; $('gArc').style.strokeDashoffset=283*(1-pct); });
   $('loadTable').innerHTML=(C.loadRows||[]).map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('');
+  if(lm==='practical' && C.practicalDoc){
+    $('practicalDocWrap').style.display='block';
+    $('practicalDocThumb').src=C.practicalDoc;
+    $('practicalDocBtn').onclick=()=>{ $('lbStage').innerHTML=`<img src="${C.practicalDoc}">`; $('lbCap').textContent='Practical load worksheet — NEC 220.87 (12 months of utility data)'; $('lightbox').classList.add('open'); };
+  } else $('practicalDocWrap').style.display='none';
 
   $('siteLead').textContent = (C.siteNote||'').trim()
     ? C.siteNote.trim()
@@ -785,7 +815,7 @@ const FIELDS=[
  ['phone','Customer phone'],['projectNo','Project number'],['date','Proposal date'],['advisor','Energy advisor'],
  ['advisorPhone','Advisor phone'],['advisorEmail','Advisor email'],['carModel','Car model'],['charger','Charger'],
  ['breakerAmps','Breaker amps (number)'],['drawAmps','Constant draw amps'],['panelDesc','Panel description'],['panelRating','Panel rating (A)'],
- ['calcLoad','Calculated load (A)'],['wireRun','Wire / conduit run'],['locationDesc','Charger location'],['siteNote','Site note — sentence under \'Exactly where it goes\' (blank = auto from data)'],['loadSolution','Panel load situation','select',[['','Auto (OK if load ≤ rating)'],['ok','Panel OK — no upgrade needed'],['schedule','Over capacity — night charging schedules (no permit)'],['dcc','Over capacity — DCC Load Management'],['sak','Over capacity — SAK Load Management'],['tesla','Over capacity — Tesla Remote Meter'],['simpleswitch','Over capacity — simpleSwitch EVEMS (48A)'],['upgrade','Panel Upgrade — included in project']]],['subpanel','Subpanel situation','select',[['','No subpanel needed'],['required','Subpanel required — no breaker space (capacity OK)'],['addon','Subpanel available as optional add-on']]],['loadNote','Extra load-management note (optional)'],['price','Final price (e.g. $670.00)'],
+ ['calcLoad','Calculated load (A)'],['wireRun','Wire / conduit run'],['locationDesc','Charger location'],['siteNote','Site note — sentence under \'Exactly where it goes\' (blank = auto from data)'],['loadSolution','Panel load situation','select',[['','Auto (OK if load ≤ rating)'],['ok','Panel OK — no upgrade needed'],['practical','Over capacity on paper — practical load per NEC 220.87 (12-mo utility bills)'],['schedule','Over capacity — night charging schedules (no permit)'],['dcc','Over capacity — DCC Load Management'],['sak','Over capacity — SAK Load Management'],['tesla','Over capacity — Tesla Remote Meter'],['simpleswitch','Over capacity — simpleSwitch EVEMS (48A)'],['upgrade','Panel Upgrade — included in project']]],['subpanel','Subpanel situation','select',[['','No subpanel needed'],['required','Subpanel required — no breaker space (capacity OK)'],['addon','Subpanel available as optional add-on']]],['practicalLoad','Practical load result (A) — NEC 220.87'],['loadNote','Extra load-management note (optional)'],['price','Final price (e.g. $670.00)'],
  ['zellePrice','Zelle price (blank = hide)'],['taxLine','Price subtitle line'],['acceptUrl','CRM quote Accept link (client-specific URL)'],['signUrl','E-signature link — Dropbox Sign/HelloSign or DocuSign URL, or type: email'],['signRole','Prefill role name (DocuSign PowerForms only, optional)']
 ];
 function editorOpen(){
@@ -820,6 +850,27 @@ function shrink(file){
     rd.readAsDataURL(file);
   });
 }
+$('edPractical').addEventListener('change',async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    if(f.type==='application/pdf'){
+      await loadPdfJs();
+      const pdf=await window.pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;
+      const pg=await pdf.getPage(1);
+      const vp=pg.getViewport({scale:1.6});
+      const cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+      await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+      CFG.practicalDoc=cv.toDataURL('image/jpeg',.85);
+    } else {
+      CFG.practicalDoc=await shrink(f);
+    }
+    render();
+    alert('Worksheet attached — it will appear in the load section when the NEC 220.87 option is selected.');
+  }catch(err){ alert('Could not read that file ('+err.message+'). Try a screenshot/photo of the worksheet instead.'); }
+  e.target.value='';
+});
+$('edPracticalClear').onclick=()=>{ CFG.practicalDoc=''; render(); };
+
 $('edAddPhotos').addEventListener('change',async e=>{
   CFG.photos=CFG.photos||[];
   for(const f of e.target.files){
