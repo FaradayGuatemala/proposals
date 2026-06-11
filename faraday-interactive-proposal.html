@@ -361,6 +361,10 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
         <text x="110" y="112" text-anchor="middle" font-size="11" fill="#6E6E6A" font-family="IBM Plex Mono">of <tspan id="gCap">200</tspan>A capacity</text>
       </svg>
       <div style="font-size:12px;color:var(--muted);margin-top:6px">Calculated load including your new EV charger<br>(NEC 220.53 / 220.82)</div>
+      <div id="subGaugeWrap" style="display:none;margin-top:16px;text-align:left">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px"><span style="font-weight:700;color:var(--ink)">Subpanel load</span><span class="mono" id="subGaugeTxt"></span></div>
+        <div style="height:10px;background:#ECECEA;border-radius:6px;overflow:hidden"><div id="subGaugeFill" style="height:100%;width:0%;background:linear-gradient(90deg,#1E9E6A,#E2231A);border-radius:6px;transition:width 1.2s ease"></div></div>
+      </div>
     </div>
     <div class="badges">
       <div id="loadBadges"></div>
@@ -386,9 +390,9 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
   <div class="prep">
     <h4>&#9888; Before installation day</h4>
     <ul>
-      <li>Clear the garage wall and surrounding area where the charger will be mounted — our electrician needs safe working space.</li>
-      <li>Make sure we can access the main panel.</li>
-      <li>If the space isn't cleared, a re-schedule and additional fee may apply.</li>
+      <li>Clear the charging location area and its surroundings — the wall and space where the charger will be mounted, whether that's in the garage, a carport, or an exterior wall. Our electrician needs safe working space.</li>
+      <li>Make sure we can access the electrical panel we'll be installing from — the main panel, or the subpanel if your installation uses one.</li>
+      <li>If the space isn't cleared on installation day, a re-schedule and additional fee may apply.</li>
     </ul>
   </div>
 </section>
@@ -548,6 +552,8 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
   "siteNote":"",
   "loadSolution":"",
   "subpanel":"",
+  "subpanelRating":"",
+  "subpanelLoad":"",
   "practicalLoad":"",
   "practicalDocs":[],
   "loadNote":"",
@@ -670,6 +676,8 @@ function render(){
   const verdictCard=`<div class="gcard ${LM.card[0]}"><div class="ic">${LM.card[1]}</div><div class="v">${LM.card[2]}</div><div class="l">${LM.card[3]}</div></div>`;
   const subCard = C.subpanel==='required'
     ? `<div class="gcard tech"><div class="ic">&#129520;</div><div class="v">Subpanel included</div><div class="l">Creates breaker space — panel capacity verified</div></div>`
+    : C.subpanel==='distance'
+    ? `<div class="gcard tech"><div class="ic">&#128205;</div><div class="v">Subpanel included</div><div class="l">Placed near your charger — cleaner, shorter run</div></div>`
     : C.subpanel==='addon'
     ? `<div class="gcard"><div class="ic">&#129513;</div><div class="v">Subpanel add-on</div><div class="l">Optional — creates breaker space if you want room to grow</div></div>`
     : '';
@@ -704,6 +712,7 @@ function render(){
   ];
   // panel upgrade happens first on site — reposition its step right after access info
   if(lm==='upgrade' && LM.step){ const idx=stepsArr.findIndex(s=>s[0]===LM.step[0]); const st=stepsArr.splice(idx,1)[0]; stepsArr.splice(1,0,st); }
+  if(C.subpanel==='distance') stepsArr.splice(1,0,['Subpanel install',`Your charger location sits a good distance from the main panel — so we install a subpanel near the charger, fed from your main panel. It makes for a cleaner, shorter final run, easier service, and ready-made space for future circuits.`]);
   if(C.subpanel==='required') stepsArr.splice(1,0,['Subpanel install',`Your main panel has the electrical capacity for the charger but no physical space left for a new breaker — so we install a subpanel fed from your main panel, creating clean breaker space for your charger\u2019s dedicated circuit (with room for future additions).`]);
   $('steps').innerHTML = stepsArr.map((s,i)=>`<div class="step"><div class="n">${i+1}</div><div><h4>${s[0]}</h4><p>${esc(s[1])}</p></div></div>`).join('');
 
@@ -733,6 +742,11 @@ function render(){
   if(C.subpanel) badgeList=badgeList.filter(b=>!/No subpanel needed/.test(b[2]));
   $('loadBadges').innerHTML=badgeList.map(b=>B(b[0],b[1],b[2])).join('');
   if(C.subpanel==='required') $('loadBadges').innerHTML+=B('techb','&#129520;','Your panel has the capacity, but no physical breaker space — a subpanel is included to create the space for your charger\u2019s circuit');
+  if(C.subpanel==='distance') $('loadBadges').innerHTML+=B('techb','&#128205;','A subpanel is installed near the charger location — the smart way to cover the distance from your main panel: a cleaner, shorter run with room for future circuits');
+  if(C.subpanel && C.subpanelRating && C.subpanelLoad){
+    const spOk=C.subpanelLoad<=C.subpanelRating;
+    $('loadBadges').innerHTML+=B(spOk?'':'warnb', spOk?'✓':'!', 'Subpanel load calculation: '+C.subpanelLoad+'A of '+C.subpanelRating+'A subpanel capacity — '+(spOk?'verified within capacity':'over capacity, see your advisor'));
+  }
   if(C.subpanel==='addon') $('loadBadges').innerHTML+=B('techb','&#129513;','Optional add-on: a subpanel to create extra breaker space (your panel\u2019s capacity is fine) — ask your Energy Advisor');
   if((C.loadNote||'').trim()) $('loadBadges').innerHTML+=B('techb','&#128172;',esc(C.loadNote.trim()));
   const gaugeLoad = (lm==='practical' && C.practicalLoad) ? C.practicalLoad : C.calcLoad;
@@ -740,6 +754,11 @@ function render(){
   document.querySelector('.gauge-box > div').innerHTML = lm==='practical'
     ? 'Actual maximum demand incl. your new EV charger<br>(NEC 220.87 · 12 months of utility data)'
     : 'Calculated load including your new EV charger<br>(NEC 220.53 / 220.82)';
+  if(C.subpanel && C.subpanelRating && C.subpanelLoad){
+    $('subGaugeWrap').style.display='block';
+    $('subGaugeTxt').textContent=C.subpanelLoad+'A of '+C.subpanelRating+'A';
+    requestAnimationFrame(()=>{ $('subGaugeFill').style.width=Math.min(C.subpanelLoad/C.subpanelRating*100,100)+'%'; });
+  } else $('subGaugeWrap').style.display='none';
   const pct=Math.min(gaugeLoad/C.panelRating,1);
   requestAnimationFrame(()=>{ $('gArc').style.transition='stroke-dashoffset 1.4s ease'; $('gArc').style.strokeDashoffset=283*(1-pct); });
   $('loadTable').innerHTML=(C.loadRows||[]).map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('');
@@ -781,20 +800,24 @@ function render(){
   });
 
   $('qProj').textContent=C.projectNo;
+  const money=v=>{ v=(v||'').trim(); if(!v) return v;
+    const n=v.replace(/^\$\s*/,'').replace(/,/g,'');
+    if(/^\d+(\.\d+)?$/.test(n)) return '$'+parseFloat(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    return v; };
   const hasPermit=(C.permitTotal||'').trim();
   let qHtml=(C.items||[]).map(i=>`<div class="q-item"><span>${esc(i)}</span><span class="inc">INCLUDED</span></div>`).join('');
-  if(hasPermit) qHtml+=`<div class="q-item"><span><b>Permit — processed by Faraday Electric</b></span><span style="font-family:var(--mono);font-weight:600">${esc(C.permitTotal.trim())}</span></div>`;
+  if(hasPermit) qHtml+=`<div class="q-item"><span><b>Permit — processed by Faraday Electric</b></span><span style="font-family:var(--mono);font-weight:600">${esc(money(C.permitTotal))}</span></div>`;
   $('qItems').innerHTML=qHtml;
-  $('qTotal').textContent=C.price;
+  $('qTotal').textContent=money(C.price);
   let sub=C.taxLine||'';
   if(hasPermit && /^Parts & Labor\b/.test(sub)) sub=sub.replace(/^Parts & Labor/,'Parts, Labor & Permit');
   $('qTermsLine').textContent=sub;
   if(hasPermit && (C.priceLabor||'').trim()){
-    $('qLaborRow').style.display='flex'; $('qLaborVal').textContent=C.priceLabor.trim();
+    $('qLaborRow').style.display='flex'; $('qLaborVal').textContent=money(C.priceLabor);
   } else $('qLaborRow').style.display='none';
   const zp=(C.zellePrice||'').trim();
-  if(zp && !/^(blank|none|n\/a|no|-+)$/i.test(zp)){ $('qZelleRow').style.display='flex'; $('qZelle').textContent=zp; } else $('qZelleRow').style.display='none';
-  $('sPrice').textContent=C.price;
+  if(zp && !/^(blank|none|n\/a|no|-+)$/i.test(zp)){ $('qZelleRow').style.display='flex'; $('qZelle').textContent=money(zp); } else $('qZelleRow').style.display='none';
+  $('sPrice').textContent=money(C.price);
 
   $('aAdv').textContent=C.advisor;
   $('aCall').href='tel:'+C.advisorPhone.replace(/[^0-9+]/g,'');
@@ -853,7 +876,7 @@ const FIELDS=[
  ['phone','Customer phone'],['projectNo','Project number'],['date','Proposal date'],['advisor','Energy advisor'],
  ['advisorPhone','Advisor phone'],['advisorEmail','Advisor email'],['carModel','Car model / EV (any brand)'],['charger','EV charger model — any brand, shown At a Glance (e.g. ChargePoint HomeFlex, Wallbox Pulsar, Tesla Wall Connector)'],
  ['breakerAmps','Breaker amps (number)'],['drawAmps','Constant draw amps'],['panelDesc','Panel description'],['panelRating','Panel rating (A)'],
- ['calcLoad','Calculated load (A)'],['wireRun','Wire / conduit run'],['locationDesc','Charger location'],['siteNote','Site note — sentence under \'Exactly where it goes\' (blank = auto from data)'],['loadSolution','Panel load situation','select',[['','Auto (OK if load ≤ rating)'],['ok','Panel OK — no upgrade needed'],['practical','Over capacity on paper — practical load per NEC 220.87 (12-mo utility bills)'],['schedule','Over capacity — night charging schedules (no permit)'],['dcc','Over capacity — DCC Load Management'],['sak','Over capacity — SAK Load Management'],['tesla','Over capacity — Tesla Remote Meter'],['simpleswitch','Over capacity — simpleSwitch EVEMS (48A)'],['upgrade','Panel Upgrade — included in project']]],['subpanel','Subpanel situation','select',[['','No subpanel needed'],['required','Subpanel required — no breaker space (capacity OK)'],['addon','Subpanel available as optional add-on']]],['practicalLoad','Practical load result (A) — NEC 220.87'],['loadNote','Extra load-management note (optional)'],['price','Final price — grand total (e.g. $954.20)'],['permitTotal','Permit total (blank = no permit, e.g. $244.90)'],['priceLabor','Parts & Labor only price (shown when permit present)'],
+ ['calcLoad','Calculated load (A)'],['wireRun','Wire / conduit run'],['locationDesc','Charger location'],['siteNote','Site note — sentence under \'Exactly where it goes\' (blank = auto from data)'],['loadSolution','Panel load situation','select',[['','Auto (OK if load ≤ rating)'],['ok','Panel OK — no upgrade needed'],['practical','Over capacity on paper — practical load per NEC 220.87 (12-mo utility bills)'],['schedule','Over capacity — night charging schedules (no permit)'],['dcc','Over capacity — DCC Load Management'],['sak','Over capacity — SAK Load Management'],['tesla','Over capacity — Tesla Remote Meter'],['simpleswitch','Over capacity — simpleSwitch EVEMS (48A)'],['upgrade','Panel Upgrade — included in project']]],['subpanel','Subpanel situation','select',[['','No subpanel needed'],['required','Subpanel required — no breaker space (capacity OK)'],['distance','Subpanel for distance & location convenience'],['addon','Subpanel available as optional add-on']]],['subpanelRating','Subpanel rating (A) — enables subpanel load calc'],['subpanelLoad','Subpanel calculated load (A)'],['practicalLoad','Practical load result (A) — NEC 220.87'],['loadNote','Extra load-management note (optional)'],['price','Final price — grand total (e.g. $954.20)'],['permitTotal','Permit total (blank = no permit, e.g. $244.90)'],['priceLabor','Parts & Labor only price (shown when permit present)'],
  ['zellePrice','Zelle price (blank = hide)'],['taxLine','Price subtitle line'],['acceptUrl','CRM quote Accept link (client-specific URL)'],['signUrl','E-signature link — Dropbox Sign/HelloSign or DocuSign URL, or type: email'],['signRole','Prefill role name (DocuSign PowerForms only, optional)']
 ];
 function editorOpen(){
@@ -871,6 +894,7 @@ function editorApply(){
   document.querySelectorAll('#edFields input, #edFields select').forEach(i=>{
     let v=i.value; const k=i.dataset.k;
     if(['breakerAmps','drawAmps','panelRating','calcLoad'].includes(k)) v=parseFloat(v)||0;
+    if(['subpanelRating','subpanelLoad','practicalLoad'].includes(k)) v=parseFloat(v)||'';
     CFG[k]=v;
   });
   CFG.items=$('edItems').value.split('\n').map(s=>s.trim()).filter(Boolean);
