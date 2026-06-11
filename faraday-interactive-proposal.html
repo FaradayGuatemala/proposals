@@ -468,9 +468,26 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
   <div id="edGallery" style="display:grid;gap:8px;margin-top:8px"></div>
   <div class="ed-actions">
     <button class="btn btn-dark" id="edApply">Apply changes</button>
-    <button class="btn btn-red" id="edSave">&#8681; Save client copy (.html)</button>
+    <button class="btn btn-red" id="edPublish">&#128640; Publish &amp; get client link</button>
+    <button class="btn btn-ghost" id="edSave">&#8681; Save client copy (.html)</button>
     <button class="btn btn-ghost" id="edClose">Close</button>
   </div>
+  <div id="pubResult" style="display:none;margin-top:12px;background:#E9F7F0;border:1.5px solid #BFE6D4;border-radius:8px;padding:12px">
+    <div style="font-weight:700;color:#136748;font-size:13px">&#9989; Published! Client link:</div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <input id="pubUrl" readonly style="flex:1;padding:7px 9px;border:1px solid #BFE6D4;border-radius:5px;font-size:12px;font-family:var(--mono)">
+      <button class="btn btn-dark" id="pubCopy" style="padding:7px 14px;font-size:12px">Copy</button>
+    </div>
+    <div class="hint" style="margin-top:6px">The link goes live in about a minute. Text it to the client.</div>
+  </div>
+  <details style="margin-top:14px"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)">&#9881; Publishing setup (one time per advisor)</summary>
+    <div class="ed-grid" style="margin-top:8px">
+      <div class="ed-f"><label>GitHub username (owner)</label><input id="ghOwner" placeholder="e.g. faradayelectric"></div>
+      <div class="ed-f"><label>Repository name</label><input id="ghRepo" placeholder="proposals"></div>
+    </div>
+    <div class="ed-f"><label>Access token (provided by your admin)</label><input id="ghToken" type="password" placeholder="github_pat_…"></div>
+    <div class="hint">Saved only in this browser — never included in client files. Ask your admin for the token.</div>
+  </details>
 </div></div>
 
 <script id="cfg" type="application/json">
@@ -721,6 +738,55 @@ function galleryRender(){
 }
 $('edApply').onclick=()=>{editorApply();$('editPanel').classList.remove('open');};
 $('edClose').onclick=()=>$('editPanel').classList.remove('open');
+/* ===== one-click publish to GitHub Pages ===== */
+['ghOwner','ghRepo','ghToken'].forEach(k=>{
+  const el=$(k);
+  el.value=localStorage.getItem('faraday_'+k)||'';
+  el.addEventListener('input',()=>localStorage.setItem('faraday_'+k,el.value.trim()));
+});
+function buildClientHtml(){
+  editorApply();
+  $('cfg').textContent=JSON.stringify(CFG);
+  return '<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+}
+function slugName(){
+  return 'faraday-proposal-'+((CFG.customerName||'client').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))+'.html';
+}
+function b64utf8(str){
+  const bytes=new TextEncoder().encode(str); let bin='';
+  const chunk=0x8000;
+  for(let i=0;i<bytes.length;i+=chunk) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+chunk));
+  return btoa(bin);
+}
+$('edPublish').onclick=async()=>{
+  const owner=$('ghOwner').value.trim(), repo=$('ghRepo').value.trim(), token=$('ghToken').value.trim();
+  if(!owner||!repo||!token){ alert('Open "Publishing setup" below and fill the GitHub details first (one time). Ask your admin for the token.'); return; }
+  const btn=$('edPublish'); btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='Publishing…';
+  try{
+    const path=slugName();
+    const api=`https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+    const headers={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+    // existing file? need its sha to overwrite
+    let sha=null;
+    const probe=await fetch(api,{headers});
+    if(probe.status===200){ sha=(await probe.json()).sha; }
+    const body={message:'Proposal: '+(CFG.customerName||'client')+' ('+(CFG.projectNo||'')+')',content:b64utf8(buildClientHtml())};
+    if(sha) body.sha=sha;
+    const put=await fetch(api,{method:'PUT',headers,body:JSON.stringify(body)});
+    if(!put.ok){ const e=await put.json().catch(()=>({})); throw new Error(put.status+' '+(e.message||'')); }
+    const url=`https://${owner}.github.io/${repo}/${path}`;
+    $('pubUrl').value=url; $('pubResult').style.display='block';
+    $('pubUrl').scrollIntoView({block:'nearest'});
+  }catch(err){
+    alert('Publish failed: '+err.message+'\n\nCheck the token and repository name in Publishing setup, or save the file and send it to your admin instead.');
+  }
+  btn.disabled=false; btn.innerHTML=prev;
+};
+$('pubCopy').onclick=async()=>{
+  try{ await navigator.clipboard.writeText($('pubUrl').value); $('pubCopy').textContent='Copied!'; setTimeout(()=>$('pubCopy').textContent='Copy',1500); }
+  catch(e){ $('pubUrl').select(); document.execCommand('copy'); }
+};
+
 $('edSave').onclick=()=>{
   editorApply();
   $('cfg').textContent=JSON.stringify(CFG);
