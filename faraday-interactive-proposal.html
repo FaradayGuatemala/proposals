@@ -119,6 +119,32 @@ button{font-family:inherit;cursor:pointer}
 .ph .cap{padding:10px 14px;font-size:12.5px;font-weight:600}
 .ph .cap span{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
 
+/* photo showcase carousel */
+.carousel{position:relative;margin-top:26px}
+.car-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;border-radius:16px;-ms-overflow-style:none;scrollbar-width:none}
+.car-track::-webkit-scrollbar{display:none}
+.car-slide{flex:0 0 100%;scroll-snap-align:center;position:relative;aspect-ratio:16/10;background:#1A1A1A;cursor:zoom-in}
+.car-slide img{width:100%;height:100%;object-fit:cover}
+.car-cap{position:absolute;left:0;right:0;bottom:0;padding:34px 18px 14px;background:linear-gradient(transparent,rgba(10,10,10,.82));color:#fff}
+.car-cap b{font-family:var(--disp);font-size:18px;letter-spacing:.04em;text-transform:uppercase}
+.car-cap span{display:block;font-size:12px;color:#D9D9D9}
+.car-btn{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;border:none;background:#141414CC;color:#fff;font-size:17px;backdrop-filter:blur(4px);z-index:5}
+.car-btn:hover{background:var(--red)}
+.car-btn.prev{left:12px}.car-btn.next{right:12px}
+.car-thumbs{display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:4px}
+.car-thumb{flex:0 0 76px;height:54px;border-radius:7px;overflow:hidden;border:2.5px solid transparent;padding:0;background:none;cursor:pointer;opacity:.65;transition:.15s}
+.car-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.car-thumb.active{border-color:var(--red);opacity:1}
+.car-count{position:absolute;top:12px;right:14px;background:#141414CC;color:#fff;font-family:var(--mono);font-size:11px;padding:3px 9px;border-radius:11px;backdrop-filter:blur(4px);z-index:5}
+/* SOW document card */
+.doc-card{display:flex;gap:22px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:26px;flex-wrap:wrap}
+.doc-stack{position:relative;width:120px;flex:none}
+.doc-stack img{width:110px;border-radius:6px;border:1px solid var(--line);box-shadow:0 6px 18px #00000022;position:relative;z-index:3}
+.doc-stack::before,.doc-stack::after{content:"";position:absolute;inset:4px -4px -4px 4px;background:#fff;border:1px solid var(--line);border-radius:6px;z-index:1}
+.doc-stack::after{inset:8px -8px -8px 8px;z-index:0;opacity:.6}
+.doc-info{flex:1;min-width:220px}
+.doc-info h4{font-family:var(--disp);font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.doc-info p{color:var(--muted);font-size:13px;margin:4px 0 12px}
 /* pricing */
 .quote-card{background:var(--card);border:2px solid var(--ink);border-radius:16px;margin-top:26px;overflow:hidden;box-shadow:0 14px 40px #00000014}
 .q-head{background:var(--ink);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
@@ -446,6 +472,14 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
       <li>If the space isn't cleared on installation day, a re-schedule and additional fee may apply.</li>
     </ul>
   </div>
+  <div class="doc-card" id="sowDocCard" style="display:none">
+    <div class="doc-stack"><img id="sowDocCover" alt="Scope of Work document"></div>
+    <div class="doc-info">
+      <h4>The complete Scope of Work</h4>
+      <p id="sowDocSub">Every detail of your installation, documented — load calculation, line diagram, code references, and renderings.</p>
+      <button class="btn btn-dark" id="sowDocBtn">&#128196; View the full document</button>
+    </div>
+  </div>
 </section>
 
 <!-- PRICING -->
@@ -536,7 +570,8 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
   <div class="ed-f" style="background:#FBEDEC;border:1.5px dashed var(--red);border-radius:10px;padding:12px;margin-bottom:14px">
     <label style="color:var(--red)">&#9889; Auto-fill from Scope of Work PDF</label>
     <input type="file" accept="application/pdf" id="edSow">
-    <div class="hint" style="margin:6px 0 0">Upload the SOW PDF and I'll extract the customer, project, panel, breaker, load and price details automatically. Always review the fields before saving.</div>
+    <div class="hint" style="margin:6px 0 0">Upload the SOW PDF and I'll extract the customer, project, panel, breaker, load and price details automatically — and optionally attach the full document for the client to view. Always review the fields before saving.</div>
+    <button class="btn btn-ghost" id="edSowClear" style="margin-top:6px;padding:6px 11px;font-size:11.5px">Remove attached SOW document</button>
   </div>
   <div class="ed-grid" id="edFields"></div>
   <div class="ed-f"><label>Quote line items (one per line)</label><textarea id="edItems" rows="4"></textarea></div>
@@ -612,6 +647,7 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
   "subpanelLoad":"",
   "practicalLoad":"",
   "practicalDocs":[],
+  "sowPages":[],
   "loadNote":"",
   "items":["Single-Family Home Installation","Wiring & Conduit — back-to-back/side-to-side","Special Breaker: Zinsco 50A","One-year Warranty"],
   "price":"$670.00",
@@ -834,6 +870,16 @@ function render(){
   const pct=Math.min(gaugeLoad/C.panelRating,1);
   requestAnimationFrame(()=>{ $('gArc').style.transition='stroke-dashoffset 1.4s ease'; $('gArc').style.strokeDashoffset=283*(1-pct); });
   $('loadTable').innerHTML=(C.loadRows||[]).map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join('');
+  if((C.sowPages||[]).length){
+    $('sowDocCard').style.display='flex';
+    $('sowDocCover').src=C.sowPages[0];
+    $('sowDocBtn').innerHTML='&#128196; View the full document ('+C.sowPages.length+' pages)';
+    $('sowDocBtn').onclick=()=>{
+      $('lbStage').innerHTML=C.sowPages.map(p=>`<img src="${p}" style="margin-bottom:14px">`).join('');
+      $('lbCap').textContent='Scope of Work — '+(C.projectNo||'')+' · scroll for all '+C.sowPages.length+' pages';
+      $('lightbox').classList.add('open');
+    };
+  } else $('sowDocCard').style.display='none';
   const pdocs = C.practicalDocs && C.practicalDocs.length ? C.practicalDocs : (C.practicalDoc?[C.practicalDoc]:[]);
   if(lm==='practical' && pdocs.length){
     $('practicalDocWrap').style.display='block';
@@ -853,7 +899,36 @@ function render(){
   window.__mks=mks;
   const photos=C.photos||[];
   if(photos.length){
-    $('photos').innerHTML = photos.map((p,i)=>`<div class="ph"><div class="img" data-idx="${i}" data-cap="${esc(p.cap||'')}${p.sub?' — '+esc(p.sub):''}"><img src="${p.src}" alt="${esc(p.cap||'Site photo')}">${mks(p)}</div><div class="cap">${esc(p.cap||'Photo')}<span>${esc(p.sub||'')}</span></div></div>`).join('');
+    $('photos').innerHTML = `<div class="carousel">
+      <div class="car-count"><span id="carIdx">1</span> / ${photos.length}</div>
+      <div class="car-track" id="carTrack">${photos.map((p,i)=>`
+        <div class="car-slide" data-idx="${i}" data-cap="${esc(p.cap||'')}${p.sub?' — '+esc(p.sub):''}">
+          <img src="${p.src}" alt="${esc(p.cap||'Site photo')}">${mks(p)}
+          <div class="car-cap"><b>${esc(p.cap||'Photo')}</b><span>${esc(p.sub||'')}</span></div>
+        </div>`).join('')}</div>
+      ${photos.length>1?`<button class="car-btn prev" id="carPrev" aria-label="Previous">&#8249;</button>
+      <button class="car-btn next" id="carNext" aria-label="Next">&#8250;</button>
+      <div class="car-thumbs" id="carThumbs">${photos.map((p,i)=>`<button class="car-thumb ${i===0?'active':''}" data-i="${i}"><img src="${p.src}" alt=""></button>`).join('')}</div>`:''}
+    </div>`;
+    const track=$('carTrack');
+    const go=i=>track.scrollTo({left:i*track.clientWidth,behavior:'smooth'});
+    if(photos.length>1){
+      $('carPrev').onclick=()=>go(Math.max(0,Math.round(track.scrollLeft/track.clientWidth)-1));
+      $('carNext').onclick=()=>go(Math.min(photos.length-1,Math.round(track.scrollLeft/track.clientWidth)+1));
+      $('carThumbs').querySelectorAll('.car-thumb').forEach(b=>b.onclick=()=>go(+b.dataset.i));
+      track.addEventListener('scroll',()=>{ requestAnimationFrame(()=>{
+        const i=Math.round(track.scrollLeft/Math.max(track.clientWidth,1));
+        $('carIdx').textContent=i+1;
+        $('carThumbs').querySelectorAll('.car-thumb').forEach((b,bi)=>b.classList.toggle('active',bi===i));
+      });},{passive:true});
+    }
+    track.querySelectorAll('.car-slide').forEach(el=>{
+      el.onclick=()=>{ const p=photos[+el.dataset.idx]; if(!p) return;
+        $('lbStage').innerHTML=`<img src="${p.src}">`+mks(p);
+        $('lbCap').textContent=el.dataset.cap;
+        $('lightbox').classList.add('open');
+      };
+    });
   } else {
     const ph=(cap,sub,icon)=>`<div class="ph"><div class="img" style="cursor:default">${icon}</div><div class="cap">${cap}<span>${sub}</span></div></div>`;
     $('photos').innerHTML =
@@ -862,14 +937,6 @@ function render(){
       ph('Charger location',esc(C.locationDesc),'&#127968;')+
       ph('The final product',esc(C.charger)+' installed','&#9889;');
   }
-
-  document.querySelectorAll('.ph .img[data-idx]').forEach(el=>{
-    el.onclick=()=>{ const p=(CFG.photos||[])[+el.dataset.idx]; if(!p) return;
-      $('lbStage').innerHTML=`<img src="${p.src}">`+mks(p);
-      $('lbCap').textContent=el.dataset.cap;
-      $('lightbox').classList.add('open');
-    };
-  });
 
   $('qProj').textContent=C.projectNo;
   const money=v=>{ v=(v||'').trim(); if(!v) return v;
@@ -1012,6 +1079,7 @@ $('edPractical').addEventListener('change',async e=>{
   e.target.value='';
 });
 $('edPracticalClear').onclick=()=>{ CFG.practicalDocs=[]; render(); };
+$('edSowClear').onclick=()=>{ CFG.sowPages=[]; render(); alert('SOW document removed from the proposal.'); };
 
 $('edAddPhotos').addEventListener('change',async e=>{
   CFG.photos=CFG.photos||[];
@@ -1247,6 +1315,17 @@ $('edSow').addEventListener('change',async e=>{
     }
     const found=parseSOW(text);
     Object.assign(CFG, found);
+    if(confirm('Also attach the full Scope of Work document so the client can view it on the page? ('+Math.min(pdf.numPages,12)+' pages)')){
+      const pages=[];
+      for(let p=1;p<=Math.min(pdf.numPages,12);p++){
+        const pg=await pdf.getPage(p);
+        const vp=pg.getViewport({scale:1.3});
+        const cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+        await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+        pages.push(cv.toDataURL('image/jpeg',.78));
+      }
+      CFG.sowPages=pages;
+    }
     // refresh inputs
     document.querySelectorAll('#edFields input, #edFields select').forEach(i=>{ if(found[i.dataset.k]!==undefined) i.value=found[i.dataset.k]; });
     if(found.items) $('edItems').value=found.items.join('\n');
