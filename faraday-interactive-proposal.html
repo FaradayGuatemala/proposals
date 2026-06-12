@@ -561,9 +561,14 @@ footer{max-width:880px;margin:40px auto 110px;padding:0 22px;font-size:11.5px;co
     <div style="font-weight:700;color:#136748;font-size:13px">&#9989; Published! Client link:</div>
     <div style="display:flex;gap:8px;margin-top:6px">
       <input id="pubUrl" readonly style="flex:1;padding:7px 9px;border:1px solid #BFE6D4;border-radius:5px;font-size:12px;font-family:var(--mono)">
-      <button class="btn btn-dark" id="pubCopy" style="padding:7px 14px;font-size:12px">Copy</button>
+      <button class="btn btn-dark" id="pubCopy" style="padding:7px 14px;font-size:12px">Copy link</button>
     </div>
-    <div class="hint" style="margin-top:6px">The link goes live in about a minute. Text it to the client.</div>
+    <div style="font-weight:700;color:#136748;font-size:13px;margin-top:12px">&#128241; Ready-to-send SMS:</div>
+    <textarea id="pubSms" readonly rows="4" style="width:100%;margin-top:6px;padding:8px 10px;border:1px solid #BFE6D4;border-radius:5px;font-size:12.5px;resize:vertical;background:#fff"></textarea>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn btn-dark" id="pubSmsCopy" style="padding:7px 14px;font-size:12px">Copy SMS message</button>
+      <span class="hint" style="align-self:center">The link goes live in ~1 minute — paste into your texting app and send.</span>
+    </div>
   </div>
   <details style="margin-top:14px"><summary style="cursor:pointer;font-size:12px;font-weight:700;color:var(--muted)">&#9881; Publishing setup (one time per advisor)</summary>
     <div class="ed-grid" style="margin-top:8px">
@@ -1091,7 +1096,10 @@ $('edPublish').onclick=async()=>{
     const put=await fetch(api,{method:'PUT',headers,body:JSON.stringify(body)});
     if(!put.ok){ const e=await put.json().catch(()=>({})); throw new Error(put.status+' '+(e.message||'')); }
     const url=`https://${owner}.github.io/${repo}/${path}`;
-    $('pubUrl').value=url; $('pubResult').style.display='block';
+    $('pubUrl').value=url;
+    const advFirst=(CFG.advisor||'your Energy Advisor').split(' ')[0];
+    $('pubSms').value=`Hi ${CFG.firstName||'there'}, it's ${advFirst} with Faraday Electric \u26A1 Your EV charger installation plan is ready — we built you an interactive page with your exact setup: your panel, your charging speed, the full plan, and your price. Take a look: ${url}`;
+    $('pubResult').style.display='block';
     $('pubUrl').scrollIntoView({block:'nearest'});
   }catch(err){
     alert('Publish failed: '+err.message+'\n\nCheck the token and repository name in Publishing setup, or save the file and send it to your admin instead.');
@@ -1099,8 +1107,12 @@ $('edPublish').onclick=async()=>{
   btn.disabled=false; btn.innerHTML=prev;
 };
 $('pubCopy').onclick=async()=>{
-  try{ await navigator.clipboard.writeText($('pubUrl').value); $('pubCopy').textContent='Copied!'; setTimeout(()=>$('pubCopy').textContent='Copy',1500); }
+  try{ await navigator.clipboard.writeText($('pubUrl').value); $('pubCopy').textContent='Copied!'; setTimeout(()=>$('pubCopy').textContent='Copy link',1500); }
   catch(e){ $('pubUrl').select(); document.execCommand('copy'); }
+};
+$('pubSmsCopy').onclick=async()=>{
+  try{ await navigator.clipboard.writeText($('pubSms').value); $('pubSmsCopy').textContent='Copied!'; setTimeout(()=>$('pubSmsCopy').textContent='Copy SMS message',1500); }
+  catch(e){ $('pubSms').select(); document.execCommand('copy'); }
 };
 
 $('edSave').onclick=()=>{
